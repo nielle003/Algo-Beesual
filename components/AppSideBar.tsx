@@ -1,5 +1,7 @@
 import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
 import Link from "next/link"
+import { ChevronDown } from "lucide-react"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuItem, DropdownMenuContent } from "@/components/ui/dropdown-menu"
 
 import {
     Sidebar,
@@ -9,7 +11,6 @@ import {
     SidebarGroupLabel,
     SidebarMenu,
     SidebarMenuButton,
-    SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
 // Menu items.
@@ -49,16 +50,24 @@ export function AppSidebar() {
                     <SidebarGroupLabel>Algorithms</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {items.map((item) => (
-                                <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton asChild>
-                                        <Link href={item.url}>
-                                            <item.icon />
-                                            <span>{item.title}</span>
-                                        </Link>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <SidebarMenuButton>
+                                        Select Algorithm
+                                        <ChevronDown className="ml-auto" />
                                     </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-[--radix-popper-anchor-width]">
+                                    {items.map((item) => (
+                                        <DropdownMenuItem key={item.title} asChild>
+                                            <Link href={item.url} className="flex items-center gap-2 w-full">
+                                                <item.icon className="w-4 h-4" />
+                                                <span>{item.title}</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
