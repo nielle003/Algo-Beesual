@@ -1,4 +1,5 @@
 import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
+import Link from "next/link"
 
 import {
     Sidebar,
@@ -14,28 +15,28 @@ import {
 // Menu items.
 const items = [
     {
-        title: "Home",
-        url: "#",
+        title: "Bubble Sort",
+        url: "/Visuals/BubbleSort",
         icon: Home,
     },
     {
-        title: "Inbox",
-        url: "#",
+        title: "Merge Sort",
+        url: "/Visuals/MergeSort",
         icon: Inbox,
     },
     {
-        title: "Calendar",
-        url: "#",
+        title: "Insertion Sort",
+        url: "/Visuals/InsertionSort",
         icon: Calendar,
     },
     {
-        title: "Search",
-        url: "#",
+        title: "Selection Sort",
+        url: "/Visuals/SelectionSort",
         icon: Search,
     },
     {
-        title: "Settings",
-        url: "#",
+        title: "Quick Sort",
+        url: "/Visuals/QuickSort",
         icon: Settings,
     },
 ]
@@ -45,16 +46,16 @@ export function AppSidebar() {
         <Sidebar>
             <SidebarContent>
                 <SidebarGroup>
-                    <SidebarGroupLabel>Application</SidebarGroupLabel>
+                    <SidebarGroupLabel>Algorithms</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {items.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild>
-                                        <a href={item.url}>
+                                        <Link href={item.url}>
                                             <item.icon />
                                             <span>{item.title}</span>
-                                        </a>
+                                        </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             ))}

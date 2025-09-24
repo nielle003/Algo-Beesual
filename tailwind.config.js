@@ -23,6 +23,9 @@ module.exports = {
         card: 'var(--card)',
         'card-foreground': 'var(--card-foreground)',
       },
+      fontFamily: {
+        quicksand: ['Quicksand', 'sans-serif'],
+      },
     },
   },
   plugins: [],
