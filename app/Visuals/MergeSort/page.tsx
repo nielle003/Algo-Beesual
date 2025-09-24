@@ -6,6 +6,7 @@ import Image from "next/image";
 function MergePage() {
     const [arr, setArr] = useState<number[]>([]);
     const [isSorting, setIsSorting] = useState(false);
+    const [isSorted, setIsSorted] = useState(false);
     const [arraySize, setArraySize] = useState(15);
     const [sortDelay, setSortDelay] = useState(100);
     const [autoStart, setAutoStart] = useState(true);
@@ -43,10 +44,12 @@ function MergePage() {
         setArr(newArr);
         setStep(0);
         setAnimations([]);
+        setIsSorted(false);
         drawArray(newArr);
     };
 
     const startSorting = () => {
+        setIsSorted(false);
         setIsSorting(true);
         const newAnimations: any[] = [];
         mergeSort([...arr], newAnimations);
@@ -68,6 +71,7 @@ function MergePage() {
         setArr(shuffledArr);
         setStep(0);
         setAnimations([]);
+        setIsSorted(false);
         drawArray(shuffledArr);
     };
 
@@ -128,8 +132,9 @@ function MergePage() {
                 drawArray(result, leftIdx, rightIdx);
                 setStep((prev) => prev + 1);
             } else {
-                if (animationFrameId.current) clearTimeout(animationFrameId.current);
                 setIsSorting(false);
+                setIsSorted(false);
+                if (animationFrameId.current) clearTimeout(animationFrameId.current);
             }
 
             animationFrameId.current = setTimeout(animate, sortDelay);
@@ -151,84 +156,86 @@ function MergePage() {
     }, [arr]);
     return (
         <main className="flex h-screen w-full flex-col items-center justify-center gap-4 p-4">
-            <div className="flex flex-col items-center space-y-6 p-6 bg-gray-900 text-white rounded-xl shadow-md">
-                <div className="flex flex-col space-y-4 w-full max-w-md">
+            <div className="flex flex-col items-center gap-6 p-6 bg-yellow-50 rounded-xl shadow-md">
+                {/* Controls */}
+                <div className="flex flex-col md:flex-row gap-6 w-full justify-center">
                     {/* Array Size */}
-                    <label className="flex flex-col text-sm">
-                        Array Size: {arraySize}
-                        <div className="flex items-center space-x-2">
-                            <span className="text-xs">5</span>
+                    <label className="flex flex-col text-sm font-medium text-gray-700">
+                        Array Size: <span className="font-bold text-gray-900">{arraySize}</span>
+                        <div className="flex items-center gap-2 mt-2">
+                            <span className="text-xs text-gray-500">5</span>
                             <input
                                 type="range"
                                 value={arraySize}
-                                onChange={handleArraySizeChange}
+                                onChange={(e) => setArraySize(Number(e.target.value))}
                                 min="5"
                                 max="50"
-                                className="flex-1 accent-blue-500"
+                                className="w-40 accent-amber-600"
                             />
-                            <span className="text-xs">50</span>
+                            <span className="text-xs text-gray-500">50</span>
                         </div>
                     </label>
 
                     {/* Sorting Speed */}
-                    <label className="flex flex-col text-sm">
-                        Sorting Speed (ms): {sortDelay}
-                        <div className="flex items-center space-x-2">
-                            <span className="text-xs">10</span>
+                    <label className="flex flex-col text-sm font-medium text-gray-700">
+                        Sorting Speed (ms): <span className="font-bold text-gray-900">{sortDelay}</span>
+                        <div className="flex items-center gap-2 mt-2">
+                            <span className="text-xs text-gray-500">10</span>
                             <input
                                 type="range"
                                 value={sortDelay}
-                                onChange={e => setSortDelay(Number(e.target.value))}
+                                onChange={(e) => setSortDelay(Number(e.target.value))}
                                 min="10"
                                 max="1000"
                                 step="10"
-                                className="flex-1 accent-green-500"
+                                className="w-40 accent-amber-600"
                             />
-                            <span className="text-xs">1000</span>
+                            <span className="text-xs text-gray-500">1000</span>
                         </div>
                     </label>
 
-                    {/* Auto Start */}
-                    <label className="flex items-center space-x-2 text-sm">
-                        <span>Auto-Start Sorting:</span>
+                    {/* Auto-Start */}
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                        Auto-Start Sorting
                         <input
                             type="checkbox"
                             checked={autoStart}
-                            onChange={e => setAutoStart(e.target.checked)}
-                            className="accent-yellow-400"
+                            onChange={(e) => setAutoStart(e.target.checked)}
+                            className="w-4 h-4 accent-amber-600"
                         />
                     </label>
-
-                    {/* Control Buttons */}
-                    <div className="flex justify-center space-x-4">
-                        <button
-                            onClick={startSorting}
-                            disabled={isSorting}
-                            className="p-2 bg-blue-600 rounded-lg disabled:opacity-40"
-                        >
-                            <Image src="/play icon.png" alt="Play" width={24} height={24} />
-                        </button>
-                        <button
-                            onClick={stopSorting}
-                            disabled={!isSorting}
-                            className="p-2 bg-red-600 rounded-lg disabled:opacity-40"
-                        >
-                            <Image src="/stop icon.png" alt="Pause" width={24} height={24} />
-                        </button>
-                        <button
-                            onClick={shuffleArray}
-                            className="p-2 bg-gray-700 rounded-lg hover:bg-gray-600"
-                        >
-                            <Image src="/shuffle icon.png" alt="Shuffle" width={24} height={24} />
-                        </button>
-                    </div>
                 </div>
 
+                {/* Buttons */}
+                <div className="flex gap-4">
+                    <button
+                        onClick={startSorting}
+                        disabled={isSorting || isSorted}
+                        className="p-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 rounded-full shadow"
+                    >
+                        <Image src="/play icon.png" alt="Play" width={24} height={24} />
+                    </button>
+                    <button
+                        onClick={stopSorting}
+                        disabled={!isSorting}
+                        className="p-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 rounded-full shadow"
+                    >
+                        <Image src="/stop icon.png" alt="Pause" width={24} height={24} />
+                    </button>
+                    <button
+                        onClick={shuffleArray}
+                        className="p-3 bg-amber-500 hover:bg-amber-600 rounded-full shadow"
+                    >
+                        <Image src="/shuffle icon.png" alt="Shuffle" width={24} height={24} />
+                    </button>
+                </div>
+
+                {/* Canvas */}
                 <canvas
                     ref={canvasRef}
                     width={500}
                     height={300}
-                    className="border border-gray-700 rounded-lg"
+                    className="border border-gray-300 rounded-md bg-white"
                 ></canvas>
             </div>
         </main>
