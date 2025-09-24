@@ -18,27 +18,27 @@ const items = [
     {
         title: "Bubble Sort",
         url: "/Visuals/BubbleSort",
-        icon: Home,
+
     },
     {
         title: "Merge Sort",
         url: "/Visuals/MergeSort",
-        icon: Inbox,
+
     },
     {
         title: "Insertion Sort",
         url: "/Visuals/InsertionSort",
-        icon: Calendar,
+
     },
     {
         title: "Selection Sort",
         url: "/Visuals/SelectionSort",
-        icon: Search,
+
     },
     {
         title: "Quick Sort",
         url: "/Visuals/QuickSort",
-        icon: Settings,
+
     },
 ]
 
@@ -61,7 +61,6 @@ export function AppSidebar() {
                                     {items.map((item) => (
                                         <DropdownMenuItem key={item.title} asChild>
                                             <Link href={item.url} className="flex items-center gap-2 w-full">
-                                                <item.icon className="w-4 h-4" />
                                                 <span>{item.title}</span>
                                             </Link>
                                         </DropdownMenuItem>
