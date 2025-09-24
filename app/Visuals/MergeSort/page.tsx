@@ -206,20 +206,20 @@ function MergePage() {
                             disabled={isSorting}
                             className="p-2 bg-blue-600 rounded-lg disabled:opacity-40"
                         >
-                            <img src="/play icon.png" alt="Play" className="w-6 h-6" />
+                            <Image src="/play icon.png" alt="Play" width={24} height={24} />
                         </button>
                         <button
                             onClick={stopSorting}
                             disabled={!isSorting}
                             className="p-2 bg-red-600 rounded-lg disabled:opacity-40"
                         >
-                            <img src="/stop icon.png" alt="Pause" className="w-6 h-6" />
+                            <Image src="/stop icon.png" alt="Pause" width={24} height={24} />
                         </button>
                         <button
                             onClick={shuffleArray}
                             className="p-2 bg-gray-700 rounded-lg hover:bg-gray-600"
                         >
-                            <img src="/shuffle icon.png" alt="Shuffle" className="w-6 h-6" />
+                            <Image src="/shuffle icon.png" alt="Shuffle" width={24} height={24} />
                         </button>
                     </div>
                 </div>
