@@ -127,6 +127,7 @@ function BubblePage() {
     return (
         <main className="flex h-screen w-full flex-col items-center justify-center gap-4 p-4">
             <div className="flex flex-col items-center gap-6 p-6 bg-yellow-50 rounded-xl shadow-md">
+                <h1 className="text-2xl font-bold text-gray-800">BubbleSort Visualization</h1>
                 {/* Controls */}
                 <div className="flex flex-col md:flex-row gap-6 w-full justify-center">
                     {/* Array Size */}

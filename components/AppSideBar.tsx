@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
+
 import Link from "next/link"
 import { ChevronDown } from "lucide-react"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuItem, DropdownMenuContent } from "@/components/ui/dropdown-menu"
@@ -13,7 +13,7 @@ import {
     SidebarMenuButton,
 } from "@/components/ui/sidebar"
 
-// Menu items.
+
 const items = [
     {
         title: "Bubble Sort",
