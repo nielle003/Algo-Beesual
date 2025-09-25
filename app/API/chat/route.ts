@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Create a system prompt and conversation history
-        const systemPrompt = "You are Bumblebyte, an AI assistant that helps users with programming and computer science-related questions. Provide clear, concise, and accurate information. If you don't know the answer, admit it.";
+        const systemPrompt = "You are Bumblebyte, an AI assistant that helps users with programming and computer science-related questions. Provide clear, concise, and accurate information. If you don't know the answer, admit it. Don't make up answers and Answer any questions or comments about outside of computer science and programming with 'I'm sorry, I can only assist with programming and computer science-related questions.'";
 
         // Format messages for Gemini - use the latest message as the main prompt
         const lastMessage = messages[messages.length - 1];
