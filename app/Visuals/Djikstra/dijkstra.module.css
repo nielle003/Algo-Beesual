@@ -1,0 +1,590 @@
+/* Main Layout */
+.mainLayout {
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+}
+
+.header {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #FFD54F 0%, #FF8A65 100%);
+    margin-bottom: 0;
+}
+
+.contentGrid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 20px;
+    padding: 20px;
+    min-height: calc(100vh - 140px);
+}
+
+@media (max-width: 1024px) {
+    .contentGrid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}
+
+.canvasSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.controlsSection {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+}
+
+.backButton {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #FFD54F 0%, #FF8A65 100%);
+    color: #3E2723;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(255, 213, 79, 0.4);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.backButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 213, 79, 0.6);
+}
+
+.title {
+    color: #3E2723;
+    margin-bottom: 8px;
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.subtitle {
+    color: #5D4037;
+    margin-bottom: 0;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Canvas Styles */
+.canvasContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.canvasTitle {
+    color: #3E2723;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.algorithmDescription {
+    color: #5D4037;
+    font-size: 0.9rem;
+    text-align: center;
+    margin: 0;
+}
+
+.pathfindingCanvas {
+    border: 3px solid #FFD54F;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(255, 213, 79, 0.3);
+    cursor: crosshair;
+    transition: all 0.3s ease;
+}
+
+.pathfindingCanvas:hover {
+    box-shadow: 0 6px 20px rgba(255, 213, 79, 0.4);
+}
+
+.canvasLegend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    font-size: 0.85rem;
+}
+
+.legendItem {
+    background: rgba(255, 213, 79, 0.2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    color: #3E2723;
+    font-weight: 500;
+}
+
+/* Action Buttons */
+.actionButtons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.runButton {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 25px;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.runButton:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+}
+
+.runButton:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.runButton.running {
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+    animation: pulse 2s infinite;
+}
+
+.stopButton {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.warning {
+    background: linear-gradient(135deg, #FFE082 0%, #FFCC02 100%);
+    color: #3E2723;
+    padding: 12px 20px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Instructions */
+.instructions {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.instructions h4 {
+    margin: 0 0 12px 0;
+    color: #495057;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.instructionGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.instructionItem {
+    font-size: 0.85rem;
+    color: #6c757d;
+    line-height: 1.4;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.controlSection {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.controlSection h3 {
+    margin: 0 0 15px 0;
+    color: #495057;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.buttonGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+}
+
+.buttonGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.buttonGrid button,
+.buttonGroup button {
+    padding: 8px 10px;
+    border: none;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #FFD54F 0%, #FF8A65 100%);
+    color: #3E2723;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(255, 193, 7, 0.3);
+}
+
+.buttonGrid button:hover,
+.buttonGroup button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.5);
+}
+
+.runButton {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    font-size: 16px !important;
+    padding: 15px 25px !important;
+    margin-top: 10px !important;
+    font-weight: 600 !important;
+}
+
+.runButton:hover:not(:disabled) {
+    background: linear-gradient(135deg, #218838 0%, #1ea085 100%) !important;
+}
+
+.runButton:disabled {
+    background: #6c757d !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+.running {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.settingItem {
+    margin-bottom: 15px;
+}
+
+.settingItem label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 14px;
+    color: #495057;
+    font-weight: 500;
+}
+
+.settingItem input[type="range"] {
+    width: 100%;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.settingItem input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #667eea;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.settingItem select {
+    padding: 10px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    background: white;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.statsPanel {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.statsPanel h4 {
+    margin: 0 0 15px 0;
+    font-size: 1.2rem;
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.statItem {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
+}
+
+.statLabel {
+    font-weight: 500;
+}
+
+.statValue {
+    font-weight: 700;
+}
+
+.stopButton {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 25px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+    z-index: 1000;
+    animation: pulse 2s infinite;
+}
+
+.warning {
+    text-align: center;
+    color: #856404;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: 2px solid #ffeaa7;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    box-shadow: 0 2px 10px rgba(255, 234, 167, 0.3);
+}
+
+.instructions {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 2px solid #bbdefb;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 10px rgba(187, 222, 251, 0.3);
+}
+
+.instructions h4 {
+    margin: 0 0 15px 0;
+    color: #1565c0;
+    font-size: 1.1rem;
+}
+
+.instructionGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px;
+}
+
+.instructionItem {
+    color: #1565c0;
+    font-size: 14px;
+}
+
+.grids {
+    display: flex;
+    justify-content: space-around;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.canvasContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.canvasContainer:hover {
+    transform: translateY(-5px);
+}
+
+.canvasContainer h3 {
+    margin: 0 0 8px 0;
+    color: #2c3e50;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.algorithmDescription {
+    margin: 0 0 15px 0;
+    color: #7f8c8d;
+    font-size: 14px;
+    text-align: center;
+    font-style: italic;
+}
+
+.pathfindingCanvas {
+    border: 3px solid #e9ecef;
+    border-radius: 10px;
+    cursor: crosshair;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.pathfindingCanvas:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.canvasLegend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 15px;
+    font-size: 12px;
+}
+
+.legendItem {
+    padding: 6px 10px;
+    background: #f8f9fa;
+    border-radius: 15px;
+    border: 1px solid #e9ecef;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.legendItem.start {
+    background: #17a2b8;
+    color: white;
+    border-color: #17a2b8;
+}
+
+.legendItem.goal {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.legendItem.wall {
+    background: #6c757d;
+    color: white;
+    border-color: #6c757d;
+}
+
+.legendItem.explored {
+    background: #ffc107;
+    color: #212529;
+    border-color: #ffc107;
+}
+
+.legendItem.path {
+    background: #fd7e14;
+    color: white;
+    border-color: #fd7e14;
+}
+
+.legendItem.frontier {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    .title {
+        font-size: 2rem;
+    }
+
+    .controls {
+        grid-template-columns: 1fr;
+        padding: 15px;
+    }
+
+    .grids {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .backButton,
+    .stopButton {
+        position: relative;
+        top: auto;
+        left: auto;
+        right: auto;
+        margin-bottom: 15px;
+    }
+
+    .pathfindingCanvas {
+        max-width: 100%;
+        height: auto;
+    }
+}

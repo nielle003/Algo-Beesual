@@ -4,6 +4,7 @@ import React from 'react'
 import Image from "next/image";
 import { useState, useEffect, useRef } from 'react';
 
+
 function BubblePage() {
     const [arr, setArr] = useState<number[]>([]);
     const [i, setI] = useState(0);
@@ -208,6 +209,7 @@ function BubblePage() {
                     height={300}
                     className="border border-gray-300 rounded-md bg-white"
                 ></canvas>
+
             </div>
         </main>
     )

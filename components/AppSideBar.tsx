@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
 import {
     Sidebar,
     SidebarContent,
@@ -39,17 +38,14 @@ const items = [
 
 const items2 = [
     {
-        title: "Sequential Search",
-        url: "/Visuals/SequentialSearch",
+        title: "Djikstra's Algorithm",
+        url: "/Visuals/Djikstra",
     },
     {
         title: "Binary Search",
         url: "/Visuals/BinarySearch",
     },
-    {
-        title: "Bubble Search",
-        url: "/Visuals/BinarySearch",
-    },
+
 ];
 
 export function AppSidebar() {
@@ -65,9 +61,11 @@ export function AppSidebar() {
                                 <SidebarMenuSub>
                                     {items.map((item) => (
                                         <SidebarMenuSubItem key={item.title}>
-                                            <Link href={item.url} passHref>
-                                                <SidebarMenuSubButton>{item.title}</SidebarMenuSubButton>
-                                            </Link>
+                                            <SidebarMenuSubButton asChild>
+                                                <Link href={item.url}>
+                                                    {item.title}
+                                                </Link>
+                                            </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                     ))}
                                 </SidebarMenuSub>
@@ -77,9 +75,11 @@ export function AppSidebar() {
                                 <SidebarMenuSub>
                                     {items2.map((item) => (
                                         <SidebarMenuSubItem key={item.title}>
-                                            <Link href={item.url} passHref>
-                                                <SidebarMenuSubButton>{item.title}</SidebarMenuSubButton>
-                                            </Link>
+                                            <SidebarMenuSubButton asChild>
+                                                <Link href={item.url}>
+                                                    {item.title}
+                                                </Link>
+                                            </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                     ))}
                                 </SidebarMenuSub>
