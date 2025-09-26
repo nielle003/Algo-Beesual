@@ -1,406 +1,225 @@
 "use client";
-
-import React from 'react'
-import { useRef, useEffect, useCallback, useState } from 'react';
-import Head from 'next/head';
-
-import usePathfindingGrid from '@/hooks/usePathfindingGrid';
-import { animateBumblebeeDijkstra } from '@/utils/bumblebeeAlgorithm';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import styles from './dijkstra.module.css';
-
-const ROWS = 10;
-const COLS = 10;
-const CELL_SIZE = 40;
-const WAIT_SECONDS_SEARCH = 100;
-const WAIT_SECONDS_PATH = 200;
-const START = { x: 0, y: 0 };
+import usePathfindingGrid, { Node } from '../../../hooks/usePathfindingGrid';
+import { animateBumblebeeDijkstra } from '../../../utils/bumblebeeAlgorithm';
 
 const BumblebeePathfinding = () => {
-    // Use custom hook for grid management
+    const [canvasSize, setCanvasSize] = useState({ width: 600, height: 600 });
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [isClient, setIsClient] = useState(false);
+
     const {
         grid,
-        goal,
-        wallDensity,
-        setWallDensity,
-        initializeGrid,
-        toggleWall,
-        setWall,
-        clearAllWalls,
-        fillAllWalls,
-        updateGoal,
+        startNode,
+        goalNode,
+        setGoalNode,
+        handleMouseDown,
+        handleMouseMove,
+        handleMouseUp,
+        handleMouseLeave,
+        clearWalls,
+        generateRandomWalls,
+    } = usePathfindingGrid(canvasRef);
 
-        getGridStats
-    } = usePathfindingGrid(ROWS, COLS, START);
-
-    // Component state
-    const [searchInProgress, setSearchInProgress] = useState(false);
-    const [showWarning, setShowWarning] = useState(false);
-    const [draggingGoal, setDraggingGoal] = useState(false);
-    const [drawingMode, setDrawingMode] = useState('toggle');
-    const [isDrawing, setIsDrawing] = useState(false);
-    const [showStats, setShowStats] = useState(false);
-
-    // Canvas ref - only need one for Dijkstra
-    const dijkstraCanvasRef = useRef<HTMLCanvasElement>(null);
-    // Ref to track search status for algorithm
     const searchInProgressRef = useRef(false);
+    const [searchStatus, setSearchStatus] = useState<{ success: boolean; path: Node[] | null } | null>(null);
 
-    // Draw grid function with bumblebee theme - respects algorithm visualization
+    const getSearchInProgress = useCallback(() => searchInProgressRef.current, []);
+    const setSearchInProgress = useCallback((value: boolean) => {
+        searchInProgressRef.current = value;
+    }, []);
+
+    const beeImage = useRef<HTMLImageElement | null>(null);
+    const flowerImage = useRef<HTMLImageElement | null>(null);
+
     const drawGrid = useCallback(() => {
-        const dijkstraCtx = dijkstraCanvasRef.current?.getContext('2d');
-
-        if (!dijkstraCtx || !grid.length || !dijkstraCanvasRef.current) return;
-
-        // Clear canvas
-        dijkstraCtx.clearRect(0, 0, dijkstraCanvasRef.current.width, dijkstraCanvasRef.current.height);
-
-        // Draw each cell with bumblebee theme
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        for (const row of grid as any[]) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            for (const cell of row as any) {
-                let fillStyle = "#FFF9C4"; // Light honey color for empty cells
-
-                // Determine cell color based on bumblebee theme and algorithm state
-                if (cell.wall) {
-                    fillStyle = "#8D6E63"; // Brown for hive walls
-                } else if (cell.x === START.x && cell.y === START.y) {
-                    fillStyle = "#FFD54F"; // Golden yellow for start (bumblebee home)
-                } else if (cell.x === goal.x && cell.y === goal.y) {
-                    fillStyle = "#FF8A65"; // Flower color for goal
-                }
-
-                // Fill cell background
-                dijkstraCtx.fillStyle = fillStyle;
-                dijkstraCtx.fillRect(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-
-                // Draw cell borders with honey-like color
-                dijkstraCtx.strokeStyle = "#FFB74D";
-                dijkstraCtx.lineWidth = 2;
-                dijkstraCtx.strokeRect(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-
-                // Add cute bumblebee and flower emojis
-                if (cell.x === START.x && cell.y === START.y) {
-                    // Draw bumblebee emoji for start
-                    dijkstraCtx.fillStyle = "black";
-                    dijkstraCtx.font = "bold 20px Arial";
-                    dijkstraCtx.textAlign = "center";
-                    dijkstraCtx.fillText("🐝", cell.x * CELL_SIZE + CELL_SIZE / 2, cell.y * CELL_SIZE + CELL_SIZE / 2 + 7);
-                } else if (cell.x === goal.x && cell.y === goal.y) {
-                    // Draw flower emoji for goal
-                    dijkstraCtx.fillStyle = "black";
-                    dijkstraCtx.font = "bold 20px Arial";
-                    dijkstraCtx.textAlign = "center";
-                    dijkstraCtx.fillText("🌻", cell.x * CELL_SIZE + CELL_SIZE / 2, cell.y * CELL_SIZE + CELL_SIZE / 2 + 7);
-                }
-            }
-        }
-    }, [grid, goal]);
-
-    // Enhanced canvas interaction
-    const handleCanvasInteraction = useCallback((event: React.MouseEvent<HTMLCanvasElement>, canvasRef: React.RefObject<HTMLCanvasElement | null>, eventType: string) => {
-        if (searchInProgress) return;
-
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!canvas || !grid || grid.length === 0) return;
+        const context = canvas.getContext('2d');
+        if (!context) return;
 
-        const rect = canvas.getBoundingClientRect();
-        const x = Math.floor((event.clientX - rect.left) / CELL_SIZE);
-        const y = Math.floor((event.clientY - rect.top) / CELL_SIZE);
+        const { width, height } = canvas;
+        context.clearRect(0, 0, width, height);
 
-        // Check bounds
-        if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return;
+        const cellSize = 20;
+        const rows = Math.floor(height / cellSize);
+        const cols = Math.floor(width / cellSize);
 
-        // Handle goal dragging
-        if (eventType === 'mousedown' && x === goal.x && y === goal.y) {
-            setDraggingGoal(true);
-            return;
-        }
-
-        if (eventType === 'mousemove' && draggingGoal) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if (!(grid as any)[y][x].wall && (x !== START.x || y !== START.y)) {
-                updateGoal({ x, y });
-            }
-            return;
-        }
-
-        if (eventType === 'mouseup') {
-            setDraggingGoal(false);
-            setIsDrawing(false);
-            return;
-        }
-
-        // Prevent modifying start or goal cells
-        if ((x === START.x && y === START.y) || (x === goal.x && y === goal.y)) return;
-
-        // Handle wall modification based on drawing mode
-        if (eventType === 'mousedown') {
-            setIsDrawing(true);
-        }
-
-        if ((eventType === 'click') ||
-            (eventType === 'mousemove' && isDrawing) ||
-            (eventType === 'mousedown')) {
-
-            switch (drawingMode) {
-                case 'toggle':
-                    if (eventType === 'click') {
-                        toggleWall(x, y);
-                    }
-                    break;
-                case 'paint':
-                    setWall(x, y, true);
-                    break;
-                case 'erase':
-                    setWall(x, y, false);
-                    break;
+        context.strokeStyle = '#F0F0F0';
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < cols; j++) {
+                context.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
             }
         }
-    }, [searchInProgress, goal, draggingGoal, drawingMode, isDrawing, grid, toggleWall, setWall, updateGoal]);
 
-    // Run Dijkstra algorithm
-    const runBumblebeePathfinding = async () => {
-        setSearchInProgress(true);
-        searchInProgressRef.current = true;
-        setShowWarning(true);
+        grid.forEach((row: Node[]) => {
+            row.forEach((node: Node) => {
+                if (node.isWall) {
+                    context.fillStyle = '#8D6E63';
+                    context.fillRect(node.x * cellSize, node.y * cellSize, cellSize, cellSize);
+                }
+            });
+        });
 
-        const dijkstraCtx = dijkstraCanvasRef.current?.getContext('2d');
-
-        if (!dijkstraCtx) {
-            setSearchInProgress(false);
-            searchInProgressRef.current = false;
-            setShowWarning(false);
-            return;
+        if (beeImage.current && startNode) {
+            context.drawImage(beeImage.current, startNode.x * cellSize, startNode.y * cellSize, cellSize, cellSize);
         }
-
-        try {
-            // Run bumblebee-themed Dijkstra algorithm
-            const dijkstraResult = await animateBumblebeeDijkstra(
-                grid,
-                START,
-                goal,
-                ROWS,
-                COLS,
-                dijkstraCtx,
-                CELL_SIZE,
-                WAIT_SECONDS_SEARCH,
-                WAIT_SECONDS_PATH,
-                () => searchInProgressRef.current
-            );
-
-            console.log('🐝 Bumblebee found the flower! Dijkstra Result:', dijkstraResult);
-
-        } catch (error) {
-            console.error('🐝 Bumblebee got lost! Error:', error);
-        } finally {
-            setSearchInProgress(false);
-            searchInProgressRef.current = false;
-            setShowWarning(false);
-            // Redraw clean grid after algorithm completes
-            setTimeout(() => drawGrid(), 100);
+        if (flowerImage.current && goalNode) {
+            context.drawImage(flowerImage.current, goalNode.x * cellSize, goalNode.y * cellSize, cellSize, cellSize);
         }
-    };
+    }, [grid, startNode, goalNode]);
 
-    // Stop searching
-    const stopSearching = () => {
-        setSearchInProgress(false);
-        searchInProgressRef.current = false;
-        setShowWarning(false);
-        drawGrid();
-    };
-
-    // Initialize grid on component mount
     useEffect(() => {
-        initializeGrid();
-    }, [initializeGrid]);
+        setIsClient(true);
+        const bee = new window.Image();
+        bee.src = '/bee.png';
+        bee.onload = () => {
+            beeImage.current = bee;
+            drawGrid();
+        };
 
-    // Redraw grid when state changes
-    useEffect(() => {
-        drawGrid();
+        const flower = new window.Image();
+        flower.src = '/flower.png';
+        flower.onload = () => {
+            flowerImage.current = flower;
+            drawGrid();
+        };
     }, [drawGrid]);
 
-    // Grid statistics
-    const gridStats = getGridStats();
+    useEffect(() => {
+        const resizeCanvas = () => {
+            if (containerRef.current) {
+                const size = Math.min(containerRef.current.offsetWidth, window.innerHeight * 0.8);
+                setCanvasSize({ width: size, height: size });
+            }
+        };
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        return () => window.removeEventListener('resize', resizeCanvas);
+    }, []);
+
+    useEffect(() => {
+        drawGrid();
+    }, [grid, startNode, goalNode, canvasSize, drawGrid]);
+
+    const runBumblebeePathfinding = async () => {
+        if (searchInProgressRef.current || !grid || !startNode || !goalNode) return;
+        setSearchInProgress(true);
+        setSearchStatus(null);
+
+        const canvas = canvasRef.current;
+        const context = canvas?.getContext('2d');
+        if (!canvas || !context) {
+            setSearchInProgress(false);
+            return;
+        }
+
+        drawGrid();
+
+        const result = await animateBumblebeeDijkstra(
+            grid,
+            startNode,
+            goalNode,
+            context,
+            20, // cellSize
+            getSearchInProgress,
+            setSearchInProgress,
+            drawGrid
+        );
+        setSearchStatus(result);
+        setSearchInProgress(false);
+    };
+
+    const stopSearch = () => {
+        setSearchInProgress(false);
+    };
+
+    const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+        if (searchInProgressRef.current) return;
+        const canvas = canvasRef.current;
+        if (!canvas || !grid) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const cellSize = 20;
+        const col = Math.floor(x / cellSize);
+        const row = Math.floor(y / cellSize);
+
+        if (row < 0 || col < 0 || row >= grid.length || col >= grid[0].length) return;
+        const clickedNode = grid[row][col];
+        if (clickedNode && !clickedNode.isWall && !clickedNode.isStart) {
+            setGoalNode(clickedNode);
+        }
+    };
+
+    if (!isClient) {
+        return <div className={styles.loading}>Loading Bumblebee Grid...</div>;
+    }
 
     return (
-        <>
-            <div className="flex h-screen w-full flex-col items-center justify-center gap-4 p-4">
-                <Head>
-                    <title>🐝 Bumblebee Pathfinding - Dijkstra Algorithm</title>
-                    <meta name="description" content="Help the cute bumblebee find flowers using Dijkstra's pathfinding algorithm!" />
-                </Head>
-
-                <div className={styles.container}>
-
-                    <h1 className={styles.title}>🐝 Bumblebee&apos;s Flower Quest</h1>
-                    <p className={styles.subtitle}>Watch our cute bumblebee find the sweetest flowers using Dijkstra&apos;s algorithm! 🌻</p>
-
-                    {/* Enhanced Controls */}
+        <div className={styles.mainLayout}>
+            <div className={styles.contentGrid}>
+                <div ref={containerRef} className={styles.canvasSection}>
+                    <canvas
+                        ref={canvasRef}
+                        width={canvasSize.width}
+                        height={canvasSize.height}
+                        onMouseDown={handleMouseDown}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseLeave}
+                        onClick={handleCanvasClick}
+                        className={styles.canvas}
+                    />
+                </div>
+                <div className={styles.controlsSection}>
+                    <header className={styles.header}>
+                        <h1>Bumblebee Pathfinding (Djikstra)</h1>
+                        <p>Help the bumblebee find the flower using Djikstra Algorithm!</p>
+                    </header>
                     <div className={styles.controls}>
-                        <div className={styles.controlSection}>
-                            <h3>� Garden Layouts</h3>
-                            <div className={styles.buttonGrid}>
-                                <button onClick={() => initializeGrid('random')} title="Random hive walls">
-                                    🎲 Wild Garden
-                                </button>
-                                <button onClick={() => initializeGrid('empty')} title="Empty meadow">
-                                    🌾 Open Meadow
-                                </button>
-                                <button onClick={() => initializeGrid('maze')} title="Flower maze">
-                                    � Flower Maze
-                                </button>
-                                <button onClick={() => initializeGrid('vertical')} title="Vertical flower rows">
-                                    🌷 Flower Rows
-                                </button>
-                                <button onClick={() => initializeGrid('horizontal')} title="Horizontal garden beds">
-                                    🌻 Garden Beds
-                                </button>
-                                <button onClick={() => initializeGrid('diagonal')} title="Diagonal paths">
-                                    ⚡ Zigzag Path
-                                </button>
-                                <button onClick={() => initializeGrid('border')} title="Garden border">
-                                    � Garden Fence
-                                </button>
-                            </div>
-                        </div>                        <div className="control-section">
-                            <h3>🏠 Garden Settings</h3>
-                            <div className="setting-item">
-                                <label>
-                                    Hive Wall Density: <strong>{Math.round(wallDensity * 100)}%</strong>
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="0.6"
-                                        step="0.05"
-                                        value={wallDensity}
-                                        onChange={(e) => setWallDensity(parseFloat(e.target.value))}
-                                    />
-                                </label>
-                            </div>
-                            <div className="setting-item">
-                                <label>
-                                    Drawing Mode:
-                                    <select
-                                        value={drawingMode}
-                                        onChange={(e) => setDrawingMode(e.target.value)}
-                                    >
-                                        <option value="toggle">🖱️ Click Toggle</option>
-                                        <option value="paint">🖌️ Build Hive (Drag)</option>
-                                        <option value="erase">🧽 Clear Path (Drag)</option>
-                                    </select>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div className="control-section">
-                            <h3>🎯 Garden Tools</h3>
-                            <div className="button-group">
-                                <button onClick={clearAllWalls} title="Remove all hive walls">
-                                    🧹 Clear Garden
-                                </button>
-                                <button onClick={fillAllWalls} title="Fill with hive walls">
-                                    🏠 Build Hive
-                                </button>
-                                <button onClick={() => setShowStats(!showStats)} title="Show grid statistics">
-                                    📊 {showStats ? 'Hide' : 'Show'} Stats
-                                </button>
-                            </div>
-                            <button
-                                onClick={runBumblebeePathfinding}
-                                disabled={searchInProgress}
-                                className={`run-button ${searchInProgress ? 'running' : ''}`}
-                            >
-                                {searchInProgress ? '🐝 Buzzing...' : '🐝 Start Flower Hunt!'}
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Grid Statistics */}
-                    {showStats && (
-                        <div className="stats-panel">
-                            <h4>📊 Grid Statistics</h4>
-                            <div className="stats-grid">
-                                <div className="stat-item">
-                                    <span className="stat-label">Total Cells:</span>
-                                    <span className="stat-value">{gridStats.totalCells}</span>
-                                </div>
-                                <div className="stat-item">
-                                    <span className="stat-label">Walls:</span>
-                                    <span className="stat-value">{gridStats.wallCount} ({gridStats.wallPercentage}%)</span>
-                                </div>
-                                <div className="stat-item">
-                                    <span className="stat-label">Empty:</span>
-                                    <span className="stat-value">{gridStats.emptyCount} ({gridStats.emptyPercentage}%)</span>
-                                </div>
-                                <div className="stat-item">
-                                    <span className="stat-label">Goal Distance:</span>
-                                    <span className="stat-value">{Math.abs(goal.x - START.x) + Math.abs(goal.y - START.y)} cells</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {searchInProgress && (
-                        <button onClick={stopSearching} className="stop-button">
-                            ⏹️ Stop Search
+                        <button onClick={runBumblebeePathfinding} disabled={searchInProgressRef.current}>
+                            <Image src="/play icon.png" alt="Play" width={20} height={20} />
+                            Find Path
                         </button>
-                    )}
-
-                    {showWarning && (
-                        <div className="warning">
-                            � <strong>Bumblebee is searching for flowers...</strong> Watch the little bee buzz around the garden!
-                        </div>
-                    )}
-
-                    {/* Instructions */}
-                    <div className="instructions">
-                        <h4>� How to Help the Bumblebee:</h4>
-                        <div className="instruction-grid">
-                            <div className="instruction-item">
-                                <strong>🎲 Generate:</strong> Try different grid patterns
-                            </div>
-                            <div className="instruction-item">
-                                <strong>🖱️ Build Garden:</strong> Click/drag to place walls
-                            </div>
-                            <div className="instruction-item">
-                                <strong>� Move Flower:</strong> Drag the flower to relocate it
-                            </div>
-                            <div className="instruction-item">
-                                <strong>🐝 Watch Magic:</strong> See how the bumblebee finds the shortest path!
-                            </div>
-                        </div>
+                        <button onClick={stopSearch} disabled={!searchInProgressRef.current}>
+                            <Image src="/stop icon.png" alt="Stop" width={20} height={20} />
+                            Stop
+                        </button>
+                        <button onClick={clearWalls} disabled={searchInProgressRef.current}>
+                            Clear Walls
+                        </button>
+                        <button onClick={generateRandomWalls} disabled={searchInProgressRef.current}>
+                            <Image src="/shuffle icon.png" alt="Shuffle" width={20} height={20} />
+                            Shuffle Walls
+                        </button>
                     </div>
-
-                    {/* Grid Display - Single Dijkstra Canvas */}
-                    <div className="grids" style={{ justifyContent: 'center' }}>
-                        <div className="canvas-container">
-                            <h3>� Bumblebee&apos;s Journey</h3>
-                            <p className="algorithm-description">Using Dijkstra&apos;s algorithm to find the sweetest path to flowers! 🌻</p>
-                            <canvas
-                                ref={dijkstraCanvasRef}
-                                width={400}
-                                height={400}
-                                onClick={(e) => handleCanvasInteraction(e, dijkstraCanvasRef, 'click')}
-                                onMouseDown={(e) => handleCanvasInteraction(e, dijkstraCanvasRef, 'mousedown')}
-                                onMouseMove={(e) => handleCanvasInteraction(e, dijkstraCanvasRef, 'mousemove')}
-                                onMouseUp={(e) => handleCanvasInteraction(e, dijkstraCanvasRef, 'mouseup')}
-                                onMouseLeave={(e) => handleCanvasInteraction(e, dijkstraCanvasRef, 'mouseup')}
-                                className="pathfinding-canvas"
-                            />
-                            <div className="canvas-legend">
-                                <span className="legend-item start">🐝 Bumblebee Home</span>
-                                <span className="legend-item goal">🌻 Sweet Flower</span>
-                                <span className="legend-item wall">🏠 Hive Walls</span>
-                                <span className="legend-item explored">🍯 Explored</span>
-                                <span className="legend-item path">✨ Bee Path</span>
-                                <span className="legend-item mode">Mode: {drawingMode}</span>
-                            </div>
+                    {searchStatus && (
+                        <div className={styles.status}>
+                            <p>
+                                {searchStatus.success
+                                    ? '🐝 Bumblebee found the flower!'
+                                    : '😢 Bumblebee could not find the flower.'}
+                            </p>
                         </div>
+                    )}
+                    <div className={styles.instructions}>
+                        <h2>How to Play</h2>
+                        <ul>
+                            <li>The bee is the start, the flower is the goal.</li>
+                            <li>Click and drag to draw walls.</li>
+                            <li>Click on an empty square to move the flower.</li>
+                            <li>Click &apos;Find Path&apos; to see the bumblebee&apos;s journey!</li>
+                        </ul>
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 

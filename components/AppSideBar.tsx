@@ -42,8 +42,8 @@ const items2 = [
         url: "/Visuals/Djikstra",
     },
     {
-        title: "Binary Search",
-        url: "/Visuals/BinarySearch",
+        title: "A* Search",
+        url: "/Visuals/A",
     },
 
 ];
