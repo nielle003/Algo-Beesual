@@ -23,7 +23,7 @@ function Header() {
     }, [isChatOpen]);
 
     return (
-        <header className="bg-popover flex h-16 w-full items-center justify-between px-4 border-b">
+        <header className="bg-amber-50 flex h-16 w-full items-center justify-between px-4 border-b border-amber-200">
             <div className="flex items-center gap-4">
                 <SidebarTrigger />
                 <Link className="flex items-center gap-2" href="/">
@@ -35,7 +35,7 @@ function Header() {
                         className="rounded-full"
                         priority
                     />
-                    <h1 className="text-xl font-semibold">
+                    <h1 className="text-xl font-semibold text-amber-900">
                         BeeSual
                     </h1>
                 </Link>
@@ -43,19 +43,19 @@ function Header() {
 
             <div className="flex items-center">
                 <ModeToggle />
-                <Button variant="outline" className="ml-4" onClick={toggleChat}>
+                <Button variant="outline" className="ml-4 border-amber-300 text-amber-800 hover:bg-amber-100 hover:text-amber-900" onClick={toggleChat}>
                     Chat with Bumblebyte
                 </Button>
             </div>
 
             {isChatOpen && (
                 <div
-                    className="fixed bottom-3 right-4 z-50 w-96 bg-white shadow-lg rounded-lg overflow-hidden"
+                    className="fixed bottom-3 right-4 z-50 w-96 bg-amber-50 shadow-lg rounded-lg overflow-hidden border border-amber-200"
                     style={{ height: chatHeight ? `${chatHeight}px` : "auto" }}
                 >
-                    <div className="flex justify-between items-center p-2 border-b">
-                        <h2 className="text-sm font-semibold">Chat with Bumblebyte</h2>
-                        <button onClick={toggleChat} className="text-gray-500 hover:text-gray-800">
+                    <div className="flex justify-between items-center p-2 border-b border-amber-200">
+                        <h2 className="text-sm font-semibold text-amber-900">Chat with Bumblebyte</h2>
+                        <button onClick={toggleChat} className="text-amber-700 hover:text-amber-900">
                             ✕
                         </button>
                     </div>
