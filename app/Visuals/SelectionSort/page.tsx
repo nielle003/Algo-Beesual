@@ -1,212 +1,241 @@
 "use client";
-import Image from "next/image";
-import { useState, useEffect, useRef } from 'react';
 
-function SelectionPage() {
-    const [arr, setArr] = useState<number[]>([]);
-    const [i, setI] = useState(0);
-    const [j, setJ] = useState(1);
-    const [minIdx, setMinIdx] = useState(0);
+import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+
+const PRIMARY_COLOR = '#FBBF24'; // Amber-400 - Current element being compared
+const SECONDARY_COLOR = '#F87171'; // Red-400 - Current minimum
+const SORTED_COLOR = '#A78BFA'; // Violet-400
+const DEFAULT_COLOR = '#4B5563'; // Gray-600
+
+type Animation =
+    | ['compare', number, number] // j, min_idx
+    | ['new_min', number]         // new min_idx
+    | ['swap', number, number, number, number] // i, min_idx, value for i, value for min_idx
+    | ['sorted', number];         // index that is now sorted
+
+function getSelectionSortAnimations(array: number[]): Animation[] {
+    const animations: Animation[] = [];
+    if (array.length <= 1) return animations;
+
+    const auxiliaryArray = [...array];
+
+    for (let i = 0; i < auxiliaryArray.length - 1; i++) {
+        let minIdx = i;
+        for (let j = i + 1; j < auxiliaryArray.length; j++) {
+            animations.push(['compare', j, minIdx]);
+            if (auxiliaryArray[j] < auxiliaryArray[minIdx]) {
+                minIdx = j;
+                animations.push(['new_min', minIdx]);
+            }
+        }
+        animations.push(['swap', i, minIdx, auxiliaryArray[minIdx], auxiliaryArray[i]]);
+        [auxiliaryArray[i], auxiliaryArray[minIdx]] = [auxiliaryArray[minIdx], auxiliaryArray[i]];
+        animations.push(['sorted', i]);
+    }
+    // Mark the last element as sorted
+    animations.push(['sorted', auxiliaryArray.length - 1]);
+    return animations;
+}
+
+export default function SelectionSortPage() {
+    const [array, setArray] = useState<number[]>([]);
+    const [arraySize, setArraySize] = useState(15);
+    const [animationSpeed, setAnimationSpeed] = useState(50);
     const [isSorting, setIsSorting] = useState(false);
     const [isSorted, setIsSorted] = useState(false);
-    const [arraySize, setArraySize] = useState(15);
-    const [sortDelay, setSortDelay] = useState(100);
-    const [autoStart, setAutoStart] = useState(true);
+    const [colorKey, setColorKey] = useState<string[]>([]);
+    const animationTimeout = useRef<NodeJS.Timeout | null>(null);
 
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const animationFrameId = useRef<any>(null);
-
-    const drawArray = (array: number[]) => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        ctx.fillStyle = '#FFF9C4';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        array.forEach((value, index) => {
-            ctx.fillStyle = index === minIdx ? '#FFD700' : '#5a3019';
-            ctx.fillRect(
-                index * (canvas.width / array.length),
-                canvas.height - value * 2,
-                (canvas.width / array.length) - 2,
-                value * 2
-            );
-        });
-    };
-
-    const initializeArray = (size = arraySize) => {
-        const newArr = Array.from({ length: size }, () => Math.floor(Math.random() * 100) + 1);
-        setArr(newArr);
-        setI(0);
-        setJ(1);
-        setMinIdx(0);
+    const generateArray = (size = arraySize) => {
+        if (isSorting) return;
         setIsSorted(false);
-        drawArray(newArr);
+        const newArray = Array.from({ length: size }, () => Math.floor(Math.random() * 80) + 10);
+        setArray(newArray);
+        setColorKey(new Array(size).fill(DEFAULT_COLOR));
     };
 
-    const shuffleArray = () => {
-        const shuffledArr = [...arr];
-        for (let k = shuffledArr.length - 1; k > 0; k--) {
-            const rand = Math.floor(Math.random() * (k + 1));
-            [shuffledArr[k], shuffledArr[rand]] = [shuffledArr[rand], shuffledArr[k]];
+    useEffect(() => {
+        generateArray();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [arraySize]);
+
+    const stopSorting = () => {
+        if (animationTimeout.current) {
+            clearTimeout(animationTimeout.current);
         }
-        setArr(shuffledArr);
-        setI(0);
-        setJ(1);
-        setMinIdx(0);
+        setIsSorting(false);
         setIsSorted(false);
-        drawArray(shuffledArr);
+        setColorKey(new Array(array.length).fill(DEFAULT_COLOR));
     };
 
     const startSorting = () => {
+        if (isSorting) return;
         setIsSorting(true);
         setIsSorted(false);
-    };
-    const stopSorting = () => {
-        setIsSorting(false);
-        clearTimeout(animationFrameId.current);
-    };
 
-    useEffect(() => {
-        if (!isSorting) return;
+        const animations = getSelectionSortAnimations(array);
+        let currentMinIdx = 0;
 
-        const selectionSortStep = () => {
-            const newArr = [...arr];
+        animations.forEach((animation, i) => {
+            animationTimeout.current = setTimeout(() => {
+                const newColorKey = [...colorKey];
+                const [type, ...values] = animation;
 
-            if (i < newArr.length - 1) {
-                if (j < newArr.length) {
-                    if (newArr[j] < newArr[minIdx]) setMinIdx(j);
-                    setJ(j + 1);
-                } else {
-                    [newArr[i], newArr[minIdx]] = [newArr[minIdx], newArr[i]];
-                    setArr(newArr);
-                    setI(i + 1);
-                    setJ(i + 2);
-                    setMinIdx(i + 1);
+                // Reset previous comparison colors, but not min or sorted
+                for (let k = 0; k < newColorKey.length; k++) {
+                    if (newColorKey[k] === PRIMARY_COLOR) {
+                        newColorKey[k] = DEFAULT_COLOR;
+                    }
                 }
-            } else {
-                clearTimeout(animationFrameId.current);
-                setIsSorting(false);
-                setIsSorted(true)
-            }
 
-            drawArray(newArr);
-            animationFrameId.current = setTimeout(selectionSortStep, sortDelay);
-        };
+                switch (type) {
+                    case 'compare': {
+                        const [j, minIdx] = values as [number, number];
+                        newColorKey[j] = PRIMARY_COLOR;
+                        newColorKey[minIdx] = SECONDARY_COLOR;
+                        currentMinIdx = minIdx;
+                        break;
+                    }
+                    case 'new_min': {
+                        const [newMin] = values as [number];
+                        // The old min becomes a regular comparison color
+                        newColorKey[currentMinIdx] = DEFAULT_COLOR;
+                        newColorKey[newMin] = SECONDARY_COLOR;
+                        currentMinIdx = newMin;
+                        break;
+                    }
+                    case 'swap': {
+                        const [idx1, idx2, val1, val2] = values as [number, number, number, number];
+                        setArray(prev => {
+                            const newArr = [...prev];
+                            newArr[idx1] = val1;
+                            newArr[idx2] = val2;
+                            return newArr;
+                        });
+                        // After swap, the new value at idx2 is just a default bar
+                        newColorKey[idx2] = DEFAULT_COLOR;
+                        break;
+                    }
+                    case 'sorted': {
+                        const [idx] = values as [number];
+                        newColorKey[idx] = SORTED_COLOR;
+                        break;
+                    }
+                }
+                setColorKey(newColorKey);
 
-        animationFrameId.current = setTimeout(selectionSortStep, sortDelay);
-        return () => clearTimeout(animationFrameId.current);
-    }, [arr, i, j, minIdx, isSorting, sortDelay]);
-
-    const handleArraySizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newSize = Number(e.target.value);
-        setArraySize(newSize);
-        initializeArray(newSize);
+                if (i === animations.length - 1) {
+                    setIsSorting(false);
+                    setIsSorted(true);
+                }
+            }, i * (3000 / animationSpeed));
+        });
     };
-
-    useEffect(() => {
-        initializeArray(arraySize);
-        if (autoStart) startSorting();
-    }, [autoStart, arraySize]);
-
-    useEffect(() => {
-        drawArray(arr);
-    }, [arr]);
-
-
-
-
-
 
     return (
-        <main className="flex h-screen w-full flex-col items-center justify-center gap-4 p-4">
-            <div className="flex flex-col items-center gap-6 p-6 bg-yellow-50 rounded-xl shadow-md">
-                <h1 className="text-2xl font-bold text-gray-800">Selection Sort Visualization</h1>
-                {/* Controls */}
-                <div className="flex flex-col md:flex-row gap-6 w-full justify-center">
-                    {/* Array Size */}
-                    <label className="flex flex-col text-sm font-medium text-gray-700">
-                        Array Size: <span className="font-bold text-gray-900">{arraySize}</span>
-                        <div className="flex items-center gap-2 mt-2">
-                            <span className="text-xs text-gray-500">5</span>
-                            <input
-                                type="range"
-                                value={arraySize}
-                                onChange={(e) => setArraySize(Number(e.target.value))}
-                                min="5"
-                                max="50"
-                                className="w-40 accent-amber-600"
-                            />
-                            <span className="text-xs text-gray-500">50</span>
-                        </div>
-                    </label>
+        <main className="flex min-h-screen w-full bg-[#FFF9C4] p-4 lg:p-8">
+            <div className="grid w-full grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Panel: Controls and Description */}
+                <div className="lg:col-span-1 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 flex flex-col justify-between border-2 border-amber-300">
+                    <div>
+                        <h1 className="text-3xl font-bold text-[#5a3019] mb-4 font-serif">Selection Sort Quest</h1>
+                        <p className="text-[#5a3019]/80 mb-6">
+                            A meticulous bee is needed for this task! Scan the garden to find the smallest flower, then plant it at the beginning of the row. Continue this process, finding the next smallest flower and planting it in the next spot, until the entire garden is sorted.
+                        </p>
 
-                    {/* Sorting Speed */}
-                    <label className="flex flex-col text-sm font-medium text-gray-700">
-                        Sorting Speed (ms): <span className="font-bold text-gray-900">{sortDelay}</span>
-                        <div className="flex items-center gap-2 mt-2">
-                            <span className="text-xs text-gray-500">10</span>
-                            <input
-                                type="range"
-                                value={sortDelay}
-                                onChange={(e) => setSortDelay(Number(e.target.value))}
-                                min="10"
-                                max="1000"
-                                step="10"
-                                className="w-40 accent-amber-600"
-                            />
-                            <span className="text-xs text-gray-500">1000</span>
-                        </div>
-                    </label>
+                        <div className="space-y-6">
+                            {/* Array Size */}
+                            <div>
+                                <label className="text-sm font-medium text-[#5a3019]">Garden Size: {arraySize} Flowers</label>
+                                <Slider
+                                    value={[arraySize]}
+                                    onValueChange={(value) => setArraySize(value[0])}
+                                    min={5}
+                                    max={25}
+                                    step={1}
+                                    disabled={isSorting}
+                                    className="mt-2"
+                                />
+                            </div>
 
-                    {/* Auto-Start */}
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                        Auto-Start Sorting
-                        <input
-                            type="checkbox"
-                            checked={autoStart}
-                            onChange={(e) => setAutoStart(e.target.checked)}
-                            className="w-4 h-4 accent-amber-600"
-                        />
-                    </label>
+                            {/* Animation Speed */}
+                            <div>
+                                <label className="text-sm font-medium text-[#5a3019]">Sorting Speed: {animationSpeed}</label>
+                                <Slider
+                                    value={[animationSpeed]}
+                                    onValueChange={(value) => setAnimationSpeed(value[0])}
+                                    min={10}
+                                    max={100}
+                                    step={5}
+                                    disabled={isSorting}
+                                    className="mt-2"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col space-y-4 mt-6">
+                        <div className="flex justify-center gap-4">
+                            <Button onClick={startSorting} disabled={isSorting || isSorted} className="w-28 bg-amber-500 hover:bg-amber-600 text-white">
+                                <Image src="/play icon.png" alt="Play" width={20} height={20} className="mr-2" />
+                                Sort
+                            </Button>
+                            <Button onClick={stopSorting} disabled={!isSorting} className="w-28 bg-red-500 hover:bg-red-600 text-white">
+                                <Image src="/stop icon.png" alt="Stop" width={20} height={20} className="mr-2" />
+                                Stop
+                            </Button>
+                        </div>
+                        <Button onClick={() => generateArray()} disabled={isSorting} className="w-full bg-green-500 hover:bg-green-600 text-white">
+                            <Image src="/shuffle icon.png" alt="Shuffle" width={20} height={20} className="mr-2" />
+                            New Garden
+                        </Button>
+                    </div>
                 </div>
 
-                {/* Buttons */}
-                <div className="flex gap-4">
-                    <button
-                        onClick={startSorting}
-                        disabled={isSorting || isSorted}
-                        className="p-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 rounded-full shadow"
-                    >
-                        <Image src="/play icon.png" alt="Play" width={24} height={24} />
-                    </button>
-                    <button
-                        onClick={stopSorting}
-                        disabled={!isSorting}
-                        className="p-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 rounded-full shadow"
-                    >
-                        <Image src="/stop icon.png" alt="Pause" width={24} height={24} />
-                    </button>
-                    <button
-                        onClick={shuffleArray}
-                        className="p-3 bg-amber-500 hover:bg-amber-600 rounded-full shadow"
-                    >
-                        <Image src="/shuffle icon.png" alt="Shuffle" width={24} height={24} />
-                    </button>
+                {/* Right Panel: Visualization */}
+                <div className="lg:col-span-2 bg-white/50 backdrop-blur-sm rounded-2xl shadow-inner p-4 lg:p-6 border-2 border-amber-200 flex items-end justify-center min-h-[300px] lg:min-h-0">
+                    <div className="flex items-end h-full w-full justify-center gap-1">
+                        {array.map((value, idx) => (
+                            <div
+                                key={idx}
+                                className="flex flex-col items-center justify-end"
+                                style={{ width: `${100 / arraySize}%` }}
+                            >
+                                <div
+                                    className="relative transition-all duration-300 ease-in-out"
+                                    style={{
+                                        height: `${value * 4}px`,
+                                        width: '80%',
+                                        backgroundColor: colorKey[idx],
+                                        borderRadius: '5px 5px 0 0',
+                                        boxShadow: `0 0 10px ${colorKey[idx]}, 0 0 20px ${colorKey[idx]}`
+                                    }}
+                                >
+                                    <Image
+                                        src="/flower.png"
+                                        alt="Flower"
+                                        width={40}
+                                        height={40}
+                                        className="absolute -top-8 left-1/2 -translate-x-1/2"
+                                        style={{
+                                            width: 'auto',
+                                            height: `${Math.max(20, value / 2)}px`,
+                                            filter: isSorted ? 'saturate(1.5)' : 'saturate(1)'
+                                        }}
+                                    />
+                                </div>
+                                <div
+                                    className="w-full h-4 rounded-b-md"
+                                    style={{ backgroundColor: colorKey[idx] }}
+                                ></div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-
-                {/* Canvas */}
-                <canvas
-                    ref={canvasRef}
-                    width={500}
-                    height={300}
-                    className="border border-gray-300 rounded-md bg-white"
-                ></canvas>
             </div>
         </main>
-    )
+    );
 }
-
-export default SelectionPage
