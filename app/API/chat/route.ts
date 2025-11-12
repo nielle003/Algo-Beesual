@@ -4,6 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 // Edge runtime is required for streaming
 export const runtime = "edge";
 
+interface Message {
+    role: string;
+    content: string;
+}
+
 export async function POST(req: NextRequest) {
     console.log('API route called');
 
@@ -45,7 +50,7 @@ export async function POST(req: NextRequest) {
 
         // Format messages for Gemini - use the latest message as the main prompt
         const lastMessage = messages[messages.length - 1];
-        const conversationContext = messages.slice(0, -1).map((message: any) => {
+        const conversationContext = messages.slice(0, -1).map((message: Message) => {
             return `${message.role === 'user' ? 'User' : 'Assistant'}: ${message.content}`;
         }).join('\n');
 

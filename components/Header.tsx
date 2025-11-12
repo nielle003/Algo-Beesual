@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { ModeToggle } from "./DarkButton";
 import { SidebarTrigger } from "./ui/sidebar";
 import { useState, useRef, useEffect } from "react";
 import Chat from "@/components/chat";
