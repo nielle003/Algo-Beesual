@@ -42,7 +42,6 @@ function Header() {
             </div>
 
             <div className="flex items-center">
-                <ModeToggle />
                 <Button variant="outline" className="ml-4 border-amber-300 text-amber-800 hover:bg-amber-100 hover:text-amber-900" onClick={toggleChat}>
                     Chat with Bumblebyte
                 </Button>

@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
 const algorithms = [
-  { name: "Dijkstra's Path", description: "Find the shortest path in a weighted grid.", path: "/Visuals/Djikstra", category: "Pathfinding" },
-  { name: "A* Search", description: "An informed search algorithm, often faster than Dijkstra's.", path: "/Visuals/A", category: "Pathfinding" },
   { name: "Bubble Sort", description: "A simple sort that repeatedly steps through the list, swapping adjacent elements.", path: "/Visuals/BubbleSort", category: "Sorting" },
   { name: "Insertion Sort", description: "Builds the final sorted array one item at a time.", path: "/Visuals/InsertionSort", category: "Sorting" },
   { name: "Selection Sort", description: "Repeatedly finds the minimum element and moves it to the sorted part.", path: "/Visuals/SelectionSort", category: "Sorting" },
   { name: "Merge Sort", description: "A classic divide-and-conquer sorting algorithm.", path: "/Visuals/MergeSort", category: "Sorting" },
   { name: "Quick Sort", description: "An efficient sort that uses a pivot to partition the array.", path: "/Visuals/QuickSort", category: "Sorting" },
+  { name: "Dijkstra's Path", description: "Find the shortest path in a weighted grid.", path: "/Visuals/Djikstra", category: "Pathfinding" },
+  { name: "A* Search", description: "An informed search algorithm, often faster than Dijkstra's.", path: "/Visuals/A", category: "Pathfinding" },
 ];
 
 export default function Home() {
