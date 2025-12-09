@@ -75,43 +75,51 @@ export default function BubbleSortPage() {
 
         animations.forEach((animation, i) => {
             animationTimeout.current = setTimeout(() => {
-                const newColorKey = [...colorKey];
                 const [type, ...values] = animation;
 
-                // Reset non-sorted colors before each step
-                for (let k = 0; k < newColorKey.length; k++) {
-                    if (newColorKey[k] !== SORTED_COLOR) {
-                        newColorKey[k] = DEFAULT_COLOR;
+                setColorKey(prev => {
+                    const newColorKey = [...prev];
+                    // Reset non-sorted colors before each step
+                    for (let k = 0; k < newColorKey.length; k++) {
+                        if (newColorKey[k] !== SORTED_COLOR) {
+                            newColorKey[k] = DEFAULT_COLOR;
+                        }
                     }
-                }
 
-                switch (type) {
-                    case 'compare': {
-                        const [idx1, idx2] = values as [number, number];
-                        if (newColorKey[idx1] !== SORTED_COLOR) newColorKey[idx1] = PRIMARY_COLOR;
-                        if (newColorKey[idx2] !== SORTED_COLOR) newColorKey[idx2] = SECONDARY_COLOR;
-                        break;
+                    switch (type) {
+                        case 'compare': {
+                            const [idx1, idx2] = values as [number, number];
+                            if (newColorKey[idx1] !== SORTED_COLOR) newColorKey[idx1] = PRIMARY_COLOR;
+                            if (newColorKey[idx2] !== SORTED_COLOR) newColorKey[idx2] = SECONDARY_COLOR;
+                            break;
+                        }
+                        case 'swap': {
+                            const [idx1, idx2] = values as [number, number, number, number];
+                            // Highlight the swapped elements
+                            if (newColorKey[idx1] !== SORTED_COLOR) newColorKey[idx1] = SECONDARY_COLOR;
+                            if (newColorKey[idx2] !== SORTED_COLOR) newColorKey[idx2] = PRIMARY_COLOR;
+                            break;
+                        }
+                        case 'sorted': {
+                            const [idx] = values as [number];
+                            newColorKey[idx] = SORTED_COLOR;
+                            break;
+                        }
                     }
-                    case 'swap': {
-                        const [idx1, idx2, val1, val2] = values as [number, number, number, number];
-                        setArray(prev => {
-                            const newArr = [...prev];
-                            newArr[idx1] = val1;
-                            newArr[idx2] = val2;
-                            return newArr;
-                        });
-                        // Highlight the swapped elements
-                        if (newColorKey[idx1] !== SORTED_COLOR) newColorKey[idx1] = SECONDARY_COLOR;
-                        if (newColorKey[idx2] !== SORTED_COLOR) newColorKey[idx2] = PRIMARY_COLOR;
-                        break;
-                    }
-                    case 'sorted': {
-                        const [idx] = values as [number];
-                        newColorKey[idx] = SORTED_COLOR;
-                        break;
-                    }
+
+                    return newColorKey;
+                });
+
+                // Handle swap value updates separately to avoid stale array closures
+                if (type === 'swap') {
+                    const [, idx1, idx2, val1, val2] = animation as ['swap', number, number, number, number];
+                    setArray(prev => {
+                        const newArr = [...prev];
+                        newArr[idx1] = val1;
+                        newArr[idx2] = val2;
+                        return newArr;
+                    });
                 }
-                setColorKey(newColorKey);
 
                 if (i === animations.length - 1) {
                     setIsSorting(false);

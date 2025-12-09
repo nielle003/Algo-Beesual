@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, RefObject } from 'react';
+import { useState, useEffect, useCallback, useRef, RefObject } from 'react';
 
 // The Node interface should be defined here, not in the component.
 export interface Node {
@@ -17,13 +17,16 @@ const usePathfindingGrid = (canvasRef: RefObject<HTMLCanvasElement | null>) => {
     const [startNode, setStartNode] = useState<Node | null>(null);
     const [goalNode, setGoalNode] = useState<Node | null>(null);
     const [isDrawing, setIsDrawing] = useState(false);
+    const drawModeRef = useRef<null | boolean>(null);
 
     const getGridDimensions = useCallback(() => {
         const canvas = canvasRef.current;
         if (!canvas) return { rows: 20, cols: 30 }; // Default size
         const cellSize = 20;
-        const rows = Math.floor(canvas.height / cellSize);
-        const cols = Math.floor(canvas.width / cellSize);
+        // Use displayed size (CSS pixels) not the backing store (device pixels)
+        const rect = canvas.getBoundingClientRect();
+        const rows = Math.floor(rect.height / cellSize);
+        const cols = Math.floor(rect.width / cellSize);
         return { rows, cols };
     }, [canvasRef]);
 
@@ -105,9 +108,10 @@ const usePathfindingGrid = (canvasRef: RefObject<HTMLCanvasElement | null>) => {
         const node = grid[row][col];
         if (!node || node.isStart || node.isGoal) return;
 
+        const mode = !node.isWall;
+        drawModeRef.current = mode;
         setIsDrawing(true);
-        const newGrid = getNewGridWithWallToggled(grid, row, col);
-        setGrid(newGrid);
+        setGrid(prevGrid => prevGrid.map((r, ri) => r.map((n, ci) => (ri === row && ci === col ? { ...n, isWall: mode } : n))));
     };
 
     const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -116,17 +120,20 @@ const usePathfindingGrid = (canvasRef: RefObject<HTMLCanvasElement | null>) => {
         if (row < 0 || col < 0 || row >= grid.length || col >= grid[0].length) return;
         const node = grid[row][col];
         if (!node || node.isStart || node.isGoal) return;
-
-        const newGrid = getNewGridWithWallToggled(grid, row, col);
-        setGrid(newGrid);
+        const mode = drawModeRef.current;
+        if (mode === null) return;
+        if (node.isWall === mode) return;
+        setGrid(prevGrid => prevGrid.map((r, ri) => r.map((n, ci) => (ri === row && ci === col ? { ...n, isWall: mode } : n))));
     };
 
     const handleMouseUp = () => {
         setIsDrawing(false);
+        drawModeRef.current = null;
     };
 
     const handleMouseLeave = () => {
         setIsDrawing(false);
+        drawModeRef.current = null;
     };
 
     const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -142,14 +149,10 @@ const usePathfindingGrid = (canvasRef: RefObject<HTMLCanvasElement | null>) => {
     };
 
     const getNewGridWithWallToggled = (currentGrid: Node[][], row: number, col: number): Node[][] => {
-        const newGrid = [...currentGrid];
-        const node = newGrid[row][col];
-        const newNode = {
-            ...node,
-            isWall: !node.isWall,
-        };
-        newGrid[row][col] = newNode;
-        return newGrid;
+        if (!currentGrid[row] || !currentGrid[row][col]) return currentGrid;
+        return currentGrid.map((r, ri) =>
+            r.map((n, ci) => (ri === row && ci === col ? { ...n, isWall: !n.isWall } : n))
+        );
     };
 
     const setNewGoalNode = (node: Node) => {
