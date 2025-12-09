@@ -198,7 +198,7 @@ const SortingVisualizer = forwardRef<SortingHandle, Props>(
             return animations;
         };
 
-        const generateArray = (size = arraySize) => {
+        const generateArray = useCallback((size = arraySize) => {
             if (isSorting) return;
             setIsSorted(false);
             const newArray = Array.from({ length: size }, () => Math.floor(Math.random() * 80) + 10);
@@ -207,7 +207,7 @@ const SortingVisualizer = forwardRef<SortingHandle, Props>(
             if (onArrayUpdate) {
                 onArrayUpdate(newArray);
             }
-        };
+        }, [arraySize, isSorting, onArrayUpdate]);
 
         // Use shared array if provided
         useEffect(() => {
@@ -238,7 +238,7 @@ const SortingVisualizer = forwardRef<SortingHandle, Props>(
             arrayRef.current = array;
         }, [array, colorKey]);
 
-        const stopSorting = () => {
+        const stopSorting = useCallback(() => {
             if (animationTimeout.current) {
                 clearTimeout(animationTimeout.current);
             }
@@ -246,7 +246,7 @@ const SortingVisualizer = forwardRef<SortingHandle, Props>(
             setIsSorting(false);
             setIsSorted(false);
             setColorKey(new Array(array.length).fill(DEFAULT_COLOR));
-        };
+        }, [array.length]);
 
         const startSorting = useCallback(() => {
             if (sortingInProgressRef.current) return;

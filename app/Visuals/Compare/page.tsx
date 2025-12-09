@@ -261,7 +261,7 @@ export default function ComparePage() {
                                             <div className="h-[calc(100% - 36px)] flex items-end">
                                                 <SortingVisualizer
                                                     ref={sortARef}
-                                                    algo={algoA as any}
+                                                    algo={algoA as 'BubbleSort' | 'QuickSort' | 'MergeSort' | 'InsertionSort' | 'SelectionSort'}
                                                     arraySize={arraySize}
                                                     animationSpeed={animationSpeed}
                                                     sharedArray={sharedSortArray}
@@ -276,7 +276,7 @@ export default function ComparePage() {
                                             <div className="h-[calc(100% - 36px)] flex items-end">
                                                 <SortingVisualizer
                                                     ref={sortBRef}
-                                                    algo={algoB as any}
+                                                    algo={algoB as 'BubbleSort' | 'QuickSort' | 'MergeSort' | 'InsertionSort' | 'SelectionSort'}
                                                     arraySize={arraySize}
                                                     animationSpeed={animationSpeed}
                                                     sharedArray={sharedSortArray}

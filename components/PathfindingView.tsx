@@ -300,4 +300,6 @@ const PathfindingView = forwardRef<PathfindingHandle, Props>(({ algo, title, com
     );
 });
 
+PathfindingView.displayName = 'PathfindingView';
+
 export default PathfindingView;
